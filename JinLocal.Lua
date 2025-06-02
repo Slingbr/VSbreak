@@ -11,6 +11,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 
 	local key = input.KeyCode
+---@diagnostic disable-next-line: undefined-global
 	if key == Enum.KeyCode.R then
 		AttackRemote:FireServer("R")
 	else if key == Enum.KeyCode.E then

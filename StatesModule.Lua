@@ -105,3 +105,33 @@ function StateModule.Apply.Frozen(char, duration, highlightFillColor)
 		end
 	end)
 end
+
+function StateModule.Apply.Stunned(char, duration)
+	if not char then return end
+
+	activeStates[char] = activeStates[char] or {}
+	activeStates[char].Stunned = true
+
+	task.delay(duration, function()
+		if char and activeStates[char] and activeStates[char].Stunned then
+			cleanup(char, "Stunned")
+		end
+	end)
+end
+
+
+function StateModule.Apply.Rooted(char, duration)
+	if not char or not char:FindFirstChild("Humanoid") then return end
+	local hum = char:FindFirstChild("Humanoid")
+
+	activeStates[char] = activeStates[char] or {}
+	activeStates[char].Rooted = true
+	hum.PlatformStand = true
+
+	task.delay(duration, function()
+		if hum and activeStates[char] and activeStates[char].Rooted then
+			hum.PlatformStand = false
+			cleanup(char, "Rooted")
+		end
+	end)
+end

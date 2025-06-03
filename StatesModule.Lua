@@ -74,3 +74,34 @@ function StateModule.Apply.Slowed(char, duration, slowSpeed, highlightFillColor,
 		end
 	end)
 end
+
+function StateModule.Apply.Frozen(char, duration, highlightFillColor)
+	if not char then return end
+
+	for _, part in pairs(char:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.Anchored = true
+		end
+	end
+
+	activeStates[char] = activeStates[char] or {}
+	if not activeStates[char].Frozen then
+		activeStates[char].Frozen = true
+		setHighlightFill(char, highlightFillColor or Color3.fromRGB(25, 25, 25), 0.25)
+	end
+
+	task.delay(duration, function()
+		if char and activeStates[char] and activeStates[char].Frozen then
+			for _, part in pairs(char:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.Anchored = false
+				end
+			end
+			cleanup(char, "Frozen")
+
+			if not activeStates[char].Slowed then
+				restoreHighlight(char)
+			end
+		end
+	end)
+end

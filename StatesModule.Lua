@@ -45,3 +45,32 @@ local function restoreHighlight(char)
 		hl.FillTransparency = backup.FillTransparency
 	end
 end
+
+function StateModule.Apply.Slowed(char, duration, slowSpeed, highlightFillColor, highlightFillTransparency)
+	if not char or not char:FindFirstChild("Humanoid") then return end
+	local hum = char:FindFirstChild("Humanoid")
+
+	activeStates[char] = activeStates[char] or {}
+	if not activeStates[char].Slowed then
+		activeStates[char].Slowed = { OriginalSpeed = hum.WalkSpeed }
+		setHighlightFill(
+			char,
+			highlightFillColor or Color3.fromRGB(25, 25, 25),
+			highlightFillTransparency or 0.25
+		)
+	end
+
+	hum.WalkSpeed = slowSpeed
+
+	task.delay(duration, function()
+		if hum and hum.Parent and activeStates[char] and activeStates[char].Slowed then
+			hum.WalkSpeed = activeStates[char].Slowed.OriginalSpeed
+			cleanup(char, "Slowed")
+
+			if not activeStates[char].Frozen then
+				restoreHighlight(char)
+			else warn("they arent highlighted")
+			end
+		end
+	end)
+end

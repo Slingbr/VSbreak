@@ -135,3 +135,39 @@ function StateModule.Apply.Rooted(char, duration)
 		end
 	end)
 end
+
+function StateModule.Apply.Invisible(char, duration)
+	if not char then return end
+
+	for _, v in ipairs(char:GetDescendants()) do
+		if v:IsA("BasePart") or v:IsA("Decal") then
+			v.Transparency = 1
+		end
+	end
+
+	activeStates[char] = activeStates[char] or {}
+	activeStates[char].Invisible = true
+
+	task.delay(duration, function()
+		if char and activeStates[char] and activeStates[char].Invisible then
+			for _, v in ipairs(char:GetDescendants()) do
+				if v:IsA("BasePart") or v:IsA("Decal") then
+					v.Transparency = 0
+				end
+			end
+			cleanup(char, "Invisible")
+		end
+	end)
+end
+
+
+function StateModule.Apply.CustomState(char, duration)
+
+end
+
+
+function StateModule.IsActive(char, state)
+	return activeStates[char] and activeStates[char][state] ~= nil
+end
+
+return StateModule

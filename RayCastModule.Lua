@@ -55,3 +55,51 @@ function RaycastHitboxModule.Raycast(params)
 		rayPart.Parent = workspace
 		Debris:AddItem(rayPart, 0.25)
 	end
+
+if returnMultiple then
+		for _ = 1, steps do
+			local angleX = (math.random() - 0.5) * 2 * spreadAngle
+			local angleY = (math.random() - 0.5) * 2 * spreadAngle
+			local spreadRotation = CFrame.Angles(angleX, angleY, 0)
+
+	
+			local rotatedDirection = (CFrame.lookAt(Vector3.zero, direction) * spreadRotation).LookVector * distance
+
+			if debug then
+				debugDrawRay(origin, rotatedDirection)
+			end
+
+			local result = workspace:Raycast(origin, rotatedDirection, raycastParams)
+			if result and result.Instance then
+				local model = result.Instance:FindFirstAncestorOfClass("Model")
+				if model and not alreadyHit[model] then
+					local humanoid = model:FindFirstChildWhichIsA("Humanoid")
+					if humanoid and humanoid.Health > 0 then
+						alreadyHit[model] = true
+						table.insert(results, model)
+					end
+				end
+			end
+		end
+	else
+		local rayDir = direction * distance
+		if debug then
+			debugDrawRay(origin, rayDir)
+		end
+
+		local result = workspace:Raycast(origin, rayDir, raycastParams)
+		if result and result.Instance then
+			local model = result.Instance:FindFirstAncestorOfClass("Model")
+			if model then
+				local humanoid = model:FindFirstChildWhichIsA("Humanoid")
+				if humanoid and humanoid.Health > 0 then
+					table.insert(results, model)
+				end
+			end
+		end
+	end
+
+	return results
+end
+
+return RaycastHitboxModule

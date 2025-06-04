@@ -103,3 +103,16 @@ if returnMultiple then
 end
 
 return RaycastHitboxModule
+
+--[[local hitModels = RaycastHitboxModule.Raycast({
+	Origin = char.Head.Position,
+	Direction = (mouse.Hit.Position - char.Head.Position),
+	Distance = 25,
+	IgnoreSelf = char,
+	Filter = {char},
+	ReturnMultiple = true,
+	Steps = 10,
+	SpreadAngle = 15,
+	Debug = true,
+})
+]]

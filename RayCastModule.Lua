@@ -36,3 +36,10 @@ function RaycastHitboxModule.Raycast(params)
 		table.insert(filter, ignoreSelf)
 	end
 
+	local raycastParams = RaycastParams.new()
+	raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+	raycastParams.FilterDescendantsInstances = filter
+	raycastParams.IgnoreWater = true
+
+	local results = {}
+	local alreadyHit = {}

@@ -43,3 +43,15 @@ function RaycastHitboxModule.Raycast(params)
 
 	local results = {}
 	local alreadyHit = {}
+-- debugger so i can see my rays
+	local function debugDrawRay(startPos, directionVec)
+		local rayPart = Instance.new("Part")
+		rayPart.Size = Vector3.new(0.1, 0.1, directionVec.Magnitude)
+		rayPart.Anchored = true
+		rayPart.CanCollide = false
+		rayPart.Material = Enum.Material.Neon
+		rayPart.BrickColor = BrickColor.new("Bright red")
+		rayPart.CFrame = CFrame.new(startPos, startPos + directionVec) * CFrame.new(0, 0, -directionVec.Magnitude / 2)
+		rayPart.Parent = workspace
+		Debris:AddItem(rayPart, 0.25)
+	end

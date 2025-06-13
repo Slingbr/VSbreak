@@ -29,3 +29,19 @@ function jinMoves.new(player: Player, getCombatInstanceFunc)
 	self.Damage = {
 		R = 8, E = 0.15, F = 5, G = 10
 	}
+    print("jinWoo module started for:", player.Name)
+
+
+	C2S.OnServerEvent:Connect(function(sender, moveName,EnemyChar)
+		if sender ~= self.player then return end
+		if moveName == "dagger dash" then
+		self:PerformDaggerDash()
+		else if moveName == "authorityPull" then
+				self:PerformPull(sender,EnemyChar)
+			end
+		end
+
+	end)
+
+	return self
+end

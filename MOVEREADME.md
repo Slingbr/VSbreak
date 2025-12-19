@@ -286,6 +286,67 @@ If the player hits the timing:
 
 If not:
 → normal outcome
+================================================================================
+Extended Window Use EXAMPLE: 5-HIT COMBO WITH TIGHTENING TIMING
+================================================================================
+["3"] = {
+	Name = "Rapid Fist Combo",
+	Cooldown = 8,
+
+	Action = function(move)
+		local hit = 1
+
+		local function openNextWindow()
+			if hit > 5 then
+				move:End("ComboComplete")
+				return
+			end
+
+			move:PlayAnim("Punch_" .. hit)
+
+			move:OpenWindow({
+				Id = "Punch" .. hit,
+				Slot = "3",
+
+				-- Timing tightens per hit
+				MinDelay = 0.12 - (hit * 0.01),
+				MaxDelay = 0.45 - (hit * 0.03),
+
+				MaxUses = 1,
+
+				OnTrigger = function(m)
+					m:DealDamage({ Amount = 2 + hit })
+					hit += 1
+					openNextWindow()
+				end
+			})
+
+			-- Fail-safe if player misses timing
+			move:After(0.5, function()
+				if move:IsActive() then
+					move:End("MissedInput")
+				end
+			end)
+		end
+
+		openNextWindow()
+	end
+
+}
+
+
+THE CORRECT WAY TO DO 5-PUNCH STRINGS
+(DO NOT open 5 separate windows)
+
+Instead of thinking:
+“One window with 5 uses”
+
+Think:
+“A sequence of windows that re-open themselves”
+This keeps:
+one active move
+clean timing
+perfect control
 
 ================================================================================
 6️⃣ GRAB MOVE EXAMPLE

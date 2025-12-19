@@ -447,10 +447,15 @@ Character modules DO NOT track awakening state.
 ================================================================================
 
 ❌ Forgetting move:End()
+
 ❌ Using wait() instead of move:After()
+
 ❌ Starting cooldowns manually
+
 ❌ Overlapping moves
+
 ❌ Putting combat logic in UI
+
 ❌ Tracking state inside CharacterService
 
 ================================================================================

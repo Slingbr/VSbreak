@@ -221,7 +221,7 @@ VARIANT EXAMPLE
                 end
             }
         }
-    }
+    },
 
 ================================================================================
 5️⃣ FOLLOW-UP WINDOWS (PRESS-TWICE / TIMING MECHANICS)
@@ -279,7 +279,7 @@ BLACK FLASH STYLE EXAMPLE
                 end
             end)
         end
-    }
+    },
 
 If the player hits the timing:
 → massive reward
@@ -332,7 +332,7 @@ Extended Window Use EXAMPLE: 5-HIT COMBO WITH TIGHTENING TIMING
 		openNextWindow()
 	end
 
-}
+},
 
 
 THE CORRECT WAY TO DO 5-PUNCH STRINGS
@@ -441,6 +441,7 @@ Awakening is ATTRIBUTE-DRIVEN.
 • Timers clear awakening
 
 Character modules DO NOT track awakening state.
+Specific Awakening Traits Are Held in the Damage Service
 
 ================================================================================
 9️⃣ COMMON MISTAKES (DO NOT DO THESE)

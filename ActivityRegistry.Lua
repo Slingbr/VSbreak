@@ -1,1 +1,1 @@
-
+-- this is where all non state machine specifics will pass through, so the game knows specifically what someone is doing and the involved instances.Moves can be cancelled.countered and functions called based on cancellation/ on counters.

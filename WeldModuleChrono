@@ -1,1 +1,154 @@
+--[[
+	Grab system — hybrid approach.
+	
+	Player victims:  Chrono Entity.SetMount for replication-safe tracking.
+	NPC victims:     Raw WeldConstraint (already works, no Chrono entity).
 
+	PlatformStand, NoTouch, Massless applied to all victims regardless of path.
+
+  this version of the weld module i made specifically for if running the game with the cutom replicator on.
+]]
+
+local Players = game:GetService("Players")
+
+local Entity = require(game.ReplicatedStorage.Packages.chrono.Shared.Entity)
+local Holder = require(game.ReplicatedStorage.Packages.chrono.Shared.Holder)
+
+local module = {}
+module.CurrentWelds = {} -- [char2] = { type = "chrono", entity = victimEntity } or { type = "weld", weld = weldConstraint }
+module.Connections  = {} -- [char2] = { conn1, conn2, ... }
+
+function module.Setup(char1, char2, offsetCFrame)
+	if not char1 or not char2 then return end
+
+	local root1 = char1:FindFirstChild("HumanoidRootPart")
+	local root2 = char2:FindFirstChild("HumanoidRootPart")
+	if not root1 or not root2 then return end
+
+	local humanoid2 = char2:FindFirstChildOfClass("Humanoid")
+	if not humanoid2 then return end
+
+	-- PlatformStand so the victim's Humanoid stops fighting
+	humanoid2.PlatformStand = true
+
+	-- Zero victim velocity
+	root2.AssemblyLinearVelocity  = Vector3.zero
+	root2.AssemblyAngularVelocity = Vector3.zero
+
+	-- NoTouch + Massless on victim
+	for _, v in pairs(char2:GetDescendants()) do
+		if v:IsA("BasePart") or v:IsA("MeshPart") then
+			v:SetAttribute("OriginalCollisionGroup", v.CollisionGroup)
+			v:SetAttribute("OriginalMassless", v.Massless)
+			v.CollisionGroup = "NoTouch"
+			v.Massless = true
+			if v.CanCollide == true then
+				v.CanCollide = false
+				v:SetAttribute("WasCanCollideEnabledBeforeWeld", true)
+			end
+		end
+	end
+
+	local player2 = Players:GetPlayerFromCharacter(char2)
+
+	if player2 then
+		-- PLAYER VICTIM: Chrono mount
+		local player1 = Players:GetPlayerFromCharacter(char1)
+
+		local attackerEntity = player1 and Holder.GetEntityFromPlayer(player1)
+		local victimEntity   = Holder.GetEntityFromPlayer(player2)
+
+		if attackerEntity and victimEntity then
+			-- Position victim before mounting
+			root2.CFrame = root1.CFrame * offsetCFrame
+			print("Attacker entity:", attackerEntity, "id:", attackerEntity and attackerEntity.id)
+			print("Attacker HRP pos:", root1.Position, "Entity model:", attackerEntity and attackerEntity.model and attackerEntity.model.Name)
+			Entity.SetMount(victimEntity, attackerEntity, offsetCFrame)
+
+			module.CurrentWelds[char2] = { type = "chrono", entity = victimEntity }
+		end
+	else
+		-- NPC VICTIM: raw WeldConstraint
+		root2.CFrame = root1.CFrame * offsetCFrame
+
+		local weld    = Instance.new("WeldConstraint")
+		weld.Name     = "CombatGrappleWeld"
+		weld.Part0    = root1
+		weld.Part1    = root2
+		weld.Parent   = root1
+
+		module.CurrentWelds[char2] = { type = "weld", weld = weld }
+	end
+
+	-- Safety connections
+	module.Connections[char2] = {}
+
+	local humanoid1 = char1:FindFirstChildOfClass("Humanoid")
+	if humanoid1 then
+		table.insert(module.Connections[char2], humanoid1:GetPropertyChangedSignal("Health"):Connect(function()
+			if humanoid1.Health <= 0 then module.Cleanup(char2) end
+		end))
+	end
+	table.insert(module.Connections[char2], humanoid2:GetPropertyChangedSignal("Health"):Connect(function()
+		if humanoid2.Health <= 0 then module.Cleanup(char2) end
+	end))
+	table.insert(module.Connections[char2], char1:GetPropertyChangedSignal("Parent"):Connect(function()
+		if not char1.Parent then module.Cleanup(char2) end
+	end))
+	table.insert(module.Connections[char2], char2:GetPropertyChangedSignal("Parent"):Connect(function()
+		if not char2.Parent then module.Cleanup(char2) end
+	end))
+end
+
+function module.Cleanup(char2)
+	if not char2 then return end
+
+	local data = module.CurrentWelds[char2]
+	if not data then return end
+	module.CurrentWelds[char2] = nil
+
+	-- Restore PlatformStand
+	local humanoid2 = char2:FindFirstChildOfClass("Humanoid")
+	if humanoid2 then
+		humanoid2.PlatformStand = false
+	end
+
+	-- Restore collision groups + Massless
+	for _, v in pairs(char2:GetDescendants()) do
+		if v:IsA("BasePart") or v:IsA("MeshPart") then
+			local originalGroup = v:GetAttribute("OriginalCollisionGroup")
+			if originalGroup then
+				v.CollisionGroup = originalGroup
+				v:SetAttribute("OriginalCollisionGroup", nil)
+			end
+			local originalMassless = v:GetAttribute("OriginalMassless")
+			if originalMassless ~= nil then
+				v.Massless = originalMassless
+				v:SetAttribute("OriginalMassless", nil)
+			end
+			if v:GetAttribute("WasCanCollideEnabledBeforeWeld") then
+				v.CanCollide = true
+				v:SetAttribute("WasCanCollideEnabledBeforeWeld", nil)
+			end
+		end
+	end
+
+	-- Release based on grab type
+	if data.type == "chrono" then
+		Entity.ClearMount(data.entity)
+	elseif data.type == "weld" then
+		if data.weld then
+			data.weld:Destroy()
+		end
+	end
+
+	-- Disconnect safety connections
+	if module.Connections[char2] then
+		for _, conn in pairs(module.Connections[char2]) do
+			conn:Disconnect()
+		end
+		module.Connections[char2] = nil
+	end
+end
+
+return module
